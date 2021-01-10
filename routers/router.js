@@ -14,15 +14,28 @@ router.get("/login", async (req, res) => {
 });
 router.get("/category_table", async (req, res) => {
   const data = await view("category_table", "id,category");
+
+  res.send(data);
+});
+router.get("/product_brand", async (req, res) => {
+  const data = await view(
+    "product_brand p ,category_table c",
+    "p.id,c.category,p.brand",
+    "c.id = p.category_id"
+  );
   res.send(data);
 });
 
 // delete method
 
 router.post("/dcategory_table", async (req, res) => {
-  console.log(req.body);
   const { id } = req.body;
   const data = await deleteData("category_table", `id =${id}`);
+  res.send(data.rowsAffected);
+});
+router.post("/dproduct_brandDelete", async (req, res) => {
+  const { id } = req.body;
+  const data = await deleteData("product_brand", `id =${id}`);
   res.send(data.rowsAffected);
 });
 
@@ -43,6 +56,17 @@ router.put("/category_table", async (req, res) => {
     { category: category },
     `id=${id}`
   );
+  res.send(data.rowsAffected);
+});
+
+router.put("/product_brand", async (req, res) => {
+  const { category_id, id, brand } = req.body;
+  const data = await update(
+    "product_brand",
+    { category_id: category_id, brand: brand },
+    `id=${id}`
+  );
+
   res.send(data.rowsAffected);
 });
 
@@ -130,6 +154,7 @@ router.post("/category", async (req, res) => {
 
 router.post("/product_brand", async (req, res) => {
   const { category_id, brand } = req.body;
+  console.log(brand);
   if (category_id == "" || brand == "") return res.status(200).send("1");
   const data = await insert("product_brand", { category_id, brand });
   data.message ? res.status(200).send("1") : res.status(200).send("0");
