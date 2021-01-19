@@ -17,11 +17,29 @@ router.get("/category_table", async (req, res) => {
 
   res.send(data);
 });
+
+router.get("/product_brandselect", async (req, res) => {
+  const data = await view(
+    "product_brand p,category_table c",
+    "DISTINCT p.category_id, c.category",
+    "p.category_id = c.id"
+  );
+  res.send(data);
+});
 router.get("/product_brand", async (req, res) => {
   const data = await view(
     "product_brand p ,category_table c",
-    "p.id,c.category,p.brand",
+    "p.id,p.category_id,c.category,p.brand",
     "c.id = p.category_id"
+  );
+  res.send(data);
+});
+
+router.get("/product_table", async (req, res) => {
+  const data = await view(
+    "category_table c, product_brand b,product_table p",
+    "p.id,p.category_id,c.category,p.product_name,b.brand,p.price,p.image",
+    "c.id = p.category_id and b.id = p.product_brand_id"
   );
   res.send(data);
 });
@@ -36,6 +54,11 @@ router.post("/dcategory_table", async (req, res) => {
 router.post("/dproduct_brandDelete", async (req, res) => {
   const { id } = req.body;
   const data = await deleteData("product_brand", `id =${id}`);
+  res.send(data.rowsAffected);
+});
+router.post("/dproduct_tableDelete", async (req, res) => {
+  const { id } = req.body;
+  const data = await deleteData("product_table", `id =${id}`);
   res.send(data.rowsAffected);
 });
 
@@ -67,6 +90,21 @@ router.put("/product_brand", async (req, res) => {
     `id=${id}`
   );
 
+  res.send(data.rowsAffected);
+});
+
+router.put("/product_table", async (req, res) => {
+  const { category_id, id, brand, productname, price } = req.body;
+  const data = await update(
+    "product_table",
+    {
+      category_id: parseInt(category_id),
+      product_brand_id: parseInt(brand),
+      product_name: productname,
+      price: price,
+    },
+    `id=${id}`
+  );
   res.send(data.rowsAffected);
 });
 
@@ -160,13 +198,6 @@ router.post("/product_brand", async (req, res) => {
   data.message ? res.status(200).send("1") : res.status(200).send("0");
 });
 
-router.post("/product_image", async (req, res) => {
-  const { product_table_id, image } = req.body;
-  if (product_table_id == "" || image == "") return res.status(200).send("1");
-  const data = await insert("product_image", { product_table_id, image });
-  data.message ? res.status(200).send("1") : res.status(200).send("0");
-});
-
 router.post("/product_image_spacification", async (req, res) => {
   const { product_table_id, image, comment } = req.body;
   if (product_table_id == "" || image == "" || comment == "")
@@ -201,12 +232,19 @@ router.post("/product_spacification", async (req, res) => {
 });
 
 router.post("/product_table", async (req, res) => {
-  const { category_id, product_name, product_brand_id, price } = req.body;
+  const {
+    category_id,
+    product_name,
+    product_brand_id,
+    price,
+    image,
+  } = req.body;
   if (
     category_id == "" ||
     product_name == "" ||
     product_brand_id == "" ||
-    price == ""
+    price == "" ||
+    image == ""
   )
     return res.status(200).send("1");
   const data = await insert("product_table", {
@@ -214,7 +252,9 @@ router.post("/product_table", async (req, res) => {
     product_name,
     product_brand_id,
     price,
+    image,
   });
+  console.log(category_id, product_name, product_brand_id, price, image);
   data.message ? res.status(200).send("1") : res.status(200).send("0");
 });
 
